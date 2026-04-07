@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     MT5_LOGIN: Optional[int] = None
     MT5_PASSWORD: Optional[str] = None
     MT5_SERVER: Optional[str] = None
+    MT5_SYMBOL: str = "XAUUSDm"
     ANALYSIS_INTERVAL_SECONDS: int = 300
 
     class Config:

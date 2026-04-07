@@ -1,12 +1,12 @@
 """
-Fundamental Analysis Agent — sends news headlines to Gemini Flash
+Fundamental Analysis Agent — sends news headlines to an LLM
 and returns structured macro/sentiment analysis for gold.
 """
 import logging
 from typing import List
 
 from models.schemas import NewsItem, FundamentalAnalysis
-from services.openrouter import call_gemini, parse_json_response
+from services.openrouter import call_llm, parse_json_response
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +56,10 @@ Rules:
 - news_summary: be concise and trader-focused"""
 
     try:
-        raw = await call_gemini(
+        raw = await call_llm(
             prompt=prompt,
             system=SYSTEM_PROMPT,
-            model="google/gemini-2.5-flash",
+            model="openai/gpt-4.1-nano",
             temperature=0.3,
         )
         data = parse_json_response(raw)

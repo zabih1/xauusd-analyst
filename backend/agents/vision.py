@@ -1,10 +1,10 @@
 """
 Chart Vision Agent — accepts a chart screenshot and returns pattern analysis.
-Uses Gemini Pro Vision via OpenRouter.
+Uses a vision-capable LLM via OpenRouter.
 """
 import logging
 from models.schemas import VisionAnalysis
-from services.openrouter import call_gemini_vision, parse_json_response
+from services.openrouter import call_llm_vision, parse_json_response
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +36,11 @@ Rules:
 
 async def analyze_chart_image(image_bytes: bytes, media_type: str = "image/png") -> VisionAnalysis:
     try:
-        raw = await call_gemini_vision(
+        raw = await call_llm_vision(
             prompt=VISION_PROMPT,
             image_bytes=image_bytes,
             media_type=media_type,
-            model="google/gemini-2.5-pro",
+            model="google/gemini-2.5-flash-lite",
         )
         data = parse_json_response(raw)
         return VisionAnalysis(**data)

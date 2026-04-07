@@ -125,14 +125,19 @@ async def lifespan(app: FastAPI):
 # ── App ───────────────────────────────────────────────────────
 app = FastAPI(
     title="XAUUSD AI Analyst",
-    description="Real-time Gold trading analysis powered by Gemini AI",
+    description="Real-time Gold trading analysis powered by AI agents",
     version="1.0.0",
     lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -196,7 +201,7 @@ async def get_latest_analysis():
 
 @app.post("/analysis/run", response_model=FullAnalysis, tags=["Analysis"])
 async def trigger_analysis():
-    """Trigger a fresh full analysis pipeline (calls Gemini)."""
+    """Trigger a fresh full analysis pipeline (calls LLM agents)."""
     return await run_full_analysis()
 
 

@@ -56,14 +56,14 @@ Interactive API docs: **http://localhost:8000/docs**
 
 ```
 MT5 Data (OHLCV) ──┐
-                    ├──→ Technical Agent (Gemini Flash)  ──┐
-News Headlines  ────┤                                      ├──→ Synthesizer (Gemini Pro) → Trade Plan
-                    └──→ Fundamental Agent (Gemini Flash) ─┘
+                    ├──→ Technical Agent (LLM)  ──┐
+News Headlines  ────┤                              ├──→ Synthesizer (LLM) → Trade Plan
+                    └──→ Fundamental Agent (LLM) ─┘
 ```
 
 **Models used:**
-- `google/gemini-2.5-flash` — Technical & Fundamental analysis (fast, cheap)
-- `google/gemini-2.5-pro` — Final synthesis & chart vision (powerful)
+- `openai/gpt-4.1-nano` — Technical, Fundamental analysis & Synthesis
+- `google/gemini-2.5-flash-lite` — Chart vision (image analysis only)
 
 ---
 
@@ -89,12 +89,12 @@ backend/
 ├── requirements.txt
 ├── .env.example
 ├── agents/
-│   ├── technical.py     ← Gemini Flash: candle analysis
-│   ├── fundamental.py   ← Gemini Flash: news/macro analysis
-│   ├── synthesizer.py   ← Gemini Pro: final trade plan
-│   └── vision.py        ← Gemini Pro Vision: chart screenshot
+│   ├── technical.py     ← LLM: candle analysis
+│   ├── fundamental.py   ← LLM: news/macro analysis
+│   ├── synthesizer.py   ← LLM: final trade plan
+│   └── vision.py        ← LLM Vision: chart screenshot
 ├── services/
-│   ├── openrouter.py    ← OpenRouter/Gemini API client
+│   ├── openrouter.py    ← OpenRouter LLM API client
 │   ├── mt5_bridge.py    ← MT5 data fetcher
 │   ├── news_fetcher.py  ← RSS + NewsAPI aggregator
 │   └── utils.py         ← Session clock, risk calculator
@@ -126,4 +126,4 @@ curl http://localhost:8000/analysis
 - **Phase 2**: React dashboard (black & gold theme) consuming these APIs
 - **Phase 3**: Chart vision panel with drag-and-drop upload
 - **Phase 4**: News sentiment panel with live feed
-- **Phase 5**: Trade journal with Gemini performance coaching
+- **Phase 5**: Trade journal with AI performance coaching

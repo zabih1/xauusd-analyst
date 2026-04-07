@@ -1,5 +1,5 @@
 """
-Technical Analysis Agent — sends OHLCV candles to Gemini Flash
+Technical Analysis Agent — sends OHLCV candles to an LLM
 and returns structured technical analysis.
 """
 import json
@@ -7,7 +7,7 @@ import logging
 from typing import List
 
 from models.schemas import Candle, TechnicalAnalysis
-from services.openrouter import call_gemini, parse_json_response
+from services.openrouter import call_llm, parse_json_response
 
 logger = logging.getLogger(__name__)
 
@@ -62,10 +62,10 @@ Rules:
 - Be specific with price levels based on the actual candle data"""
 
     try:
-        raw = await call_gemini(
+        raw = await call_llm(
             prompt=prompt,
             system=SYSTEM_PROMPT,
-            model="google/gemini-2.5-flash",
+            model="openai/gpt-4.1-nano",
             temperature=0.2,
         )
         data = parse_json_response(raw)

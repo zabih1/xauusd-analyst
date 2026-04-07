@@ -1,11 +1,11 @@
 """
 Synthesizer Agent — the "head analyst" that takes technical + fundamental
-analysis and produces a final, actionable trade plan using Gemini Pro.
+analysis and produces a final, actionable trade plan.
 """
 import logging
 
 from models.schemas import TechnicalAnalysis, FundamentalAnalysis, TradeSetup
-from services.openrouter import call_gemini, parse_json_response
+from services.openrouter import call_llm, parse_json_response
 
 logger = logging.getLogger(__name__)
 
@@ -72,10 +72,10 @@ Rules:
 - If NEUTRAL bias: set entry zone around current price, SL/TP equidistant"""
 
     try:
-        raw = await call_gemini(
+        raw = await call_llm(
             prompt=prompt,
             system=SYSTEM_PROMPT,
-            model="google/gemini-2.5-pro",
+            model="openai/gpt-4.1-nano",
             temperature=0.2,
             max_tokens=1500,
         )
@@ -83,7 +83,7 @@ Rules:
         return TradeSetup(**data)
 
     except Exception as e:
-        logger.error("Synthesizer agent failed: %s", e)
+        logger.error("Synthesizer agent failed: %s", repr(e), exc_info=True)
         sl = current_price - 10.0
         tp1 = current_price + 10.0
         tp2 = current_price + 20.0

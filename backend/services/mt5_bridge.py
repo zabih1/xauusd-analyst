@@ -18,7 +18,8 @@ except ImportError:
     MT5_AVAILABLE = False
     logger.warning("MetaTrader5 package not available — running in manual mode.")
 
-SYMBOL = "XAUUSD"
+from config import settings
+SYMBOL = getattr(settings, "MT5_SYMBOL", "XAUUSDm")
 
 TIMEFRAME_MAP = {
     "M1":  mt5.TIMEFRAME_M1  if MT5_AVAILABLE else 1,
@@ -50,6 +51,11 @@ def initialize(login: int, password: str, server: str) -> bool:
         logger.error("MT5 login failed: %s", mt5.last_error())
         mt5.shutdown()
         return False
+    
+    # Try to add symbol to Market Watch
+    if not mt5.symbol_select(SYMBOL, True):
+        logger.warning(f"Failed to select symbol {SYMBOL} in MT5 Market Watch. Check if it exists for your account type.")
+
     _connected = True
     logger.info("MT5 connected successfully.")
     return True
