@@ -1,8 +1,12 @@
 import httpx
+import asyncio
 import json
+import logging
 import base64
 from typing import Optional
 from config import settings
+
+logger = logging.getLogger(__name__)
 
 OPENROUTER_BASE = "https://openrouter.ai/api/v1/chat/completions"
 
@@ -13,6 +17,9 @@ HEADERS = {
     "X-Title": "XAUUSD Analyst",
 }
 
+MAX_RETRIES = 2
+RETRY_DELAY = 3  # seconds
+
 
 async def call_llm(
     prompt: str,
@@ -20,8 +27,9 @@ async def call_llm(
     model: str = "openai/gpt-4.1-nano",
     temperature: float = 0.3,
     max_tokens: int = 2000,
+    timeout: float = 120.0,
 ) -> str:
-    """Call an LLM via OpenRouter — text only."""
+    """Call an LLM via OpenRouter — text only. Retries on timeout."""
     messages = []
     if system:
         messages.append({"role": "system", "content": system})
@@ -34,50 +42,22 @@ async def call_llm(
         "max_tokens": max_tokens,
     }
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.post(OPENROUTER_BASE, headers=HEADERS, json=payload)
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
+    last_error = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                response = await client.post(OPENROUTER_BASE, headers=HEADERS, json=payload)
+                response.raise_for_status()
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
+        except httpx.ReadTimeout as e:
+            last_error = e
+            logger.warning("call_llm timeout (attempt %d/%d, model=%s)", attempt, MAX_RETRIES, model)
+            if attempt < MAX_RETRIES:
+                await asyncio.sleep(RETRY_DELAY)
 
+    raise last_error
 
-async def call_llm_vision(
-    prompt: str,
-    image_bytes: bytes,
-    media_type: str = "image/png",
-    model: str = "google/gemini-2.5-flash-lite",
-    temperature: float = 0.3,
-) -> str:
-    """Call a vision-capable LLM via OpenRouter — image + text."""
-    image_b64 = base64.b64encode(image_bytes).decode("utf-8")
-
-    messages = [
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:{media_type};base64,{image_b64}"
-                    },
-                },
-                {"type": "text", "text": prompt},
-            ],
-        }
-    ]
-
-    payload = {
-        "model": model,
-        "messages": messages,
-        "temperature": temperature,
-        "max_tokens": 2000,
-    }
-
-    async with httpx.AsyncClient(timeout=90.0) as client:
-        response = await client.post(OPENROUTER_BASE, headers=HEADERS, json=payload)
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
 
 
 def parse_json_response(raw: str) -> dict:
@@ -99,6 +79,5 @@ def parse_json_response(raw: str) -> dict:
     try:
         return json.loads(raw)
     except json.JSONDecodeError as e:
-        import logging
-        logging.getLogger(__name__).error("Failed to parse JSON: %s. Raw output was: %s", e, raw)
+        logger.error("Failed to parse JSON: %s. Raw output was: %s", e, raw)
         raise

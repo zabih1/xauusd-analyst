@@ -4,13 +4,13 @@ analysis and produces a final, actionable trade plan.
 """
 import logging
 
-from models.schemas import TechnicalAnalysis, FundamentalAnalysis, TradeSetup
+from models.schemas import TechnicalAnalysis, TradeSetup
 from services.openrouter import call_llm, parse_json_response
 
 logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """You are a master XAUUSD trader and head analyst.
-You receive technical and fundamental analysis from your team and synthesize them
+You receive technical analysis from your team and synthesize them
 into one precise, actionable trade plan.
 You are decisive, risk-aware, and always protect capital first.
 You ALWAYS respond with valid JSON only — no markdown, no preamble."""
@@ -19,7 +19,6 @@ You ALWAYS respond with valid JSON only — no markdown, no preamble."""
 async def synthesize(
     current_price: float,
     technical: TechnicalAnalysis,
-    fundamental: FundamentalAnalysis,
     session: str,
 ) -> TradeSetup:
 
@@ -35,13 +34,6 @@ TECHNICAL ANALYSIS:
 - Resistance Levels: {technical.resistance_levels}
 - Key Observations:
 {chr(10).join(f"  • {obs}" for obs in technical.key_observations)}
-
-FUNDAMENTAL ANALYSIS:
-- Sentiment: {fundamental.overall_sentiment} (score: {fundamental.sentiment_score:+.2f})
-- DXY Outlook: {fundamental.dxy_outlook}
-- Macro Factors:
-{chr(10).join(f"  • {f}" for f in fundamental.macro_factors)}
-- Summary: {fundamental.news_summary}
 
 SESSION CONTEXT:
 - Asian session: Low volatility, range-bound typical

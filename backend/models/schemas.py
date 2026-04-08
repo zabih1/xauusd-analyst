@@ -22,12 +22,6 @@ class Strength(str, Enum):
     WEAK = "Weak"
 
 
-class SentimentLevel(str, Enum):
-    BULLISH = "BULLISH"
-    BEARISH = "BEARISH"
-    NEUTRAL = "NEUTRAL"
-
-
 # ── Price Data ────────────────────────────────────────────────
 class Candle(BaseModel):
     time: datetime
@@ -53,16 +47,6 @@ class ManualPriceInput(BaseModel):
     ask: float
 
 
-# ── News ──────────────────────────────────────────────────────
-class NewsItem(BaseModel):
-    title: str
-    source: str
-    published_at: datetime
-    url: Optional[str] = None
-    impact: Optional[str] = None      # HIGH | MEDIUM | LOW
-    sentiment: Optional[str] = None   # BULLISH | BEARISH | NEUTRAL
-
-
 # ── Analysis ─────────────────────────────────────────────────
 class TechnicalAnalysis(BaseModel):
     trend: Trend
@@ -71,14 +55,6 @@ class TechnicalAnalysis(BaseModel):
     resistance_levels: List[float]
     key_observations: List[str]
     momentum: str
-
-
-class FundamentalAnalysis(BaseModel):
-    overall_sentiment: SentimentLevel
-    sentiment_score: float          # -1.0 to +1.0
-    dxy_outlook: str
-    macro_factors: List[str]
-    news_summary: str
 
 
 class TradeSetup(BaseModel):
@@ -100,21 +76,9 @@ class FullAnalysis(BaseModel):
     current_price: float
     session: str                    # Asian | London | New York | Overlap
     technical: TechnicalAnalysis
-    fundamental: FundamentalAnalysis
     setup: TradeSetup
-    news_items: List[NewsItem]
     candles_used: int
     source: str = "MT5"
-
-
-# ── Chart Vision ──────────────────────────────────────────────
-class VisionAnalysis(BaseModel):
-    patterns_found: List[str]
-    trend_visible: str
-    key_levels: List[str]
-    trade_suggestion: str
-    confidence: int
-    detailed_analysis: str
 
 
 # ── Risk Calculator ───────────────────────────────────────────

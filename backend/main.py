@@ -14,15 +14,13 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from config import settings
 from models.schemas import (
-    FullAnalysis, VisionAnalysis, RiskInput, RiskOutput,
+    FullAnalysis, RiskInput, RiskOutput,
     MT5Status, ManualPriceInput, PriceTick
 )
-from services import mt5_bridge, news_fetcher
+from services import mt5_bridge
 from services.utils import get_current_session, calculate_risk
 from agents.technical import analyze_technical
-from agents.fundamental import analyze_fundamental
 from agents.synthesizer import synthesize
-from agents.vision import analyze_chart_image
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
 logger = logging.getLogger(__name__)
@@ -46,25 +44,14 @@ async def run_full_analysis() -> FullAnalysis:
     # 2. Fetch candles (multi-timeframe)
     candles_by_tf = mt5_bridge.get_multi_timeframe_candles()
 
-    # 3. Fetch news
-    news_items = await news_fetcher.get_all_news()
+    # 3. Run agents
+    technical = await analyze_technical(candles_by_tf)
 
-    # 4. Run agents in parallel
-    import asyncio
-    technical, fundamental = await asyncio.gather(
-        analyze_technical(candles_by_tf),
-        analyze_fundamental(news_items),
-    )
-
-    # 5. Synthesize final trade plan
+    # 4. Synthesize final trade plan
     session = get_current_session()
-    setup = await synthesize(current_price, technical, fundamental, session)
+    setup = await synthesize(current_price, technical, session)
 
-    # 6. Assign sentiment labels to news
-    for item in news_items:
-        item.sentiment = _news_sentiment_label(item.title, fundamental.overall_sentiment)
-
-    # 7. Build result
+    # 5. Build result
     total_candles = sum(len(v) for v in candles_by_tf.values())
     analysis = FullAnalysis(
         id=str(uuid.uuid4())[:8],
@@ -72,9 +59,7 @@ async def run_full_analysis() -> FullAnalysis:
         current_price=current_price,
         session=session,
         technical=technical,
-        fundamental=fundamental,
         setup=setup,
-        news_items=news_items,
         candles_used=total_candles,
         source=tick.source,
     )
@@ -83,15 +68,6 @@ async def run_full_analysis() -> FullAnalysis:
     return analysis
 
 
-def _news_sentiment_label(title: str, overall: str) -> str:
-    title_lower = title.lower()
-    bullish_words = ["rise", "rally", "surge", "gain", "up", "high", "strong", "bullish", "safe haven", "weaken dollar"]
-    bearish_words = ["fall", "drop", "decline", "down", "low", "weak", "bearish", "rate hike", "strong dollar"]
-    if any(w in title_lower for w in bullish_words):
-        return "BULLISH"
-    if any(w in title_lower for w in bearish_words):
-        return "BEARISH"
-    return "NEUTRAL"
 
 
 # ── Lifespan ──────────────────────────────────────────────────
@@ -205,28 +181,7 @@ async def trigger_analysis():
     return await run_full_analysis()
 
 
-# ── Chart Vision ──────────────────────────────────────────────
 
-@app.post("/vision/analyze", response_model=VisionAnalysis, tags=["Vision"])
-async def analyze_chart(file: UploadFile = File(...)):
-    """Upload a chart screenshot for AI pattern analysis."""
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Only image files accepted.")
-
-    image_bytes = await file.read()
-    if len(image_bytes) > 10 * 1024 * 1024:  # 10MB max
-        raise HTTPException(status_code=413, detail="Image too large. Max 10MB.")
-
-    return await analyze_chart_image(image_bytes, file.content_type)
-
-
-# ── News ──────────────────────────────────────────────────────
-
-@app.get("/news", tags=["News"])
-async def get_news():
-    """Fetch latest gold-relevant news."""
-    items = await news_fetcher.get_all_news()
-    return {"count": len(items), "items": [i.dict() for i in items]}
 
 
 # ── Risk Calculator ───────────────────────────────────────────
