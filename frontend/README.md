@@ -23,7 +23,6 @@ npm start
 | **◉ Sentiment** | News sentiment score, DXY outlook, macro factors, live headlines |
 | **◎ Chart Vision** | Drag & drop chart screenshot → Gemini pattern recognition |
 | **⊛ Risk Calculator** | Lot size calculator with auto-fill from current analysis |
-| **⌨ Manual Price** | Set price manually when MT5 is offline |
 | **◫ Analysis Log** | Full metadata of last analysis run |
 
 ---
@@ -43,7 +42,7 @@ REACT_APP_API_URL=http://localhost:8000
 
 1. Backend auto-refreshes analysis every 5 minutes
 2. Click **⚡ RUN ANALYSIS** for immediate fresh analysis
-3. Price ticker updates every 2 seconds from MT5 (or manual)
+3. Price ticker updates every 2 seconds from MT5
 4. Drop a chart screenshot into **Chart Vision** anytime for pattern analysis
 5. Use **Auto-Fill** in Risk Calculator to pull levels from latest analysis
 
@@ -62,6 +61,5 @@ src/
     ├── TechnicalPanel.jsx← S/R levels, trend, observations
     ├── NewsSentiment.jsx ← News + macro sentiment
     ├── ChartVision.jsx   ← Screenshot upload + analysis
-    ├── RiskCalculator.jsx← Lot size calculator
-    └── ManualPrice.jsx   ← Manual price input
+    └── RiskCalculator.jsx← Lot size calculator
 ```

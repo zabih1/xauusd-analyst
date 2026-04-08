@@ -10,6 +10,12 @@ class Bias(str, Enum):
     NEUTRAL = "NEUTRAL"
 
 
+class ScalpSignal(str, Enum):
+    BUY = "BUY"
+    SELL = "SELL"
+    WAIT = "WAIT"
+
+
 class Trend(str, Enum):
     BULLISH = "Bullish"
     BEARISH = "Bearish"
@@ -39,15 +45,47 @@ class PriceTick(BaseModel):
     ask: float
     spread: float
     time: datetime
-    source: str = "MT5"  # MT5 | manual
+    source: str = "MT5"
 
 
-class ManualPriceInput(BaseModel):
-    bid: float
-    ask: float
 
 
-# ── Analysis ─────────────────────────────────────────────────
+
+# ── Per-Timeframe Analysis (new) ──────────────────────────────
+class TimeframeAnalysis(BaseModel):
+    timeframe: str                   # M1 | M5 | M15 | H1
+    trend: Trend
+    strength: Strength
+    support_levels: List[float]
+    resistance_levels: List[float]
+    momentum: str
+    scalp_signal: ScalpSignal        # BUY | SELL | WAIT
+    signal_quality: int              # 0-100
+    key_observations: List[str]
+    entry_note: str                  # what to watch for on this TF
+    warning: str                     # risk or reason to skip
+    price_at_analysis: float = 0.0
+
+
+# ── Scalper Trade Setup (new, replaces TradeSetup for scalp mode) ──
+class ScalperTradeSetup(BaseModel):
+    bias: Bias
+    primary_timeframe: str           # which TF drove the signal
+    entry_low: float
+    entry_high: float
+    stop_loss: float
+    take_profit_1: float
+    take_profit_2: float
+    risk_reward: float
+    confidence: int                  # 0-100
+    timeframe_alignment: str         # one-line alignment summary
+    reasoning: str
+    invalidation: str
+    scalp_notes: str                 # execution tips
+    do_not_trade_if: str             # skip conditions
+
+
+# ── Legacy TechnicalAnalysis (kept for backwards compatibility) ──
 class TechnicalAnalysis(BaseModel):
     trend: Trend
     strength: Strength
@@ -57,6 +95,7 @@ class TechnicalAnalysis(BaseModel):
     momentum: str
 
 
+# ── Legacy TradeSetup (kept for backwards compat) ─────────────
 class TradeSetup(BaseModel):
     bias: Bias
     entry_low: float
@@ -65,26 +104,32 @@ class TradeSetup(BaseModel):
     take_profit_1: float
     take_profit_2: float
     risk_reward: float
-    confidence: int                 # 0-100
+    confidence: int
     reasoning: str
-    invalidation: str               # when the setup is wrong
+    invalidation: str
 
 
+# ── Full Analysis Response ────────────────────────────────────
 class FullAnalysis(BaseModel):
     id: str
     timestamp: datetime
     current_price: float
-    session: str                    # Asian | London | New York | Overlap
-    technical: TechnicalAnalysis
-    setup: TradeSetup
+    session: str
+    # MTF results (new)
+    timeframe_analyses: Optional[dict] = None    # {"M1": TFAnalysis, ...}
+    setup: ScalperTradeSetup
+    # Legacy fields kept for compatibility
+    technical: Optional[TechnicalAnalysis] = None
     candles_used: int
     source: str = "MT5"
+
+
 
 
 # ── Risk Calculator ───────────────────────────────────────────
 class RiskInput(BaseModel):
     account_balance: float
-    risk_percent: float             # e.g. 1.0 for 1%
+    risk_percent: float
     entry_price: float
     stop_loss_price: float
     take_profit_price: float

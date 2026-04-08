@@ -14,25 +14,14 @@ async function apiFetch(path, options = {}) {
 export const api = {
   health:          ()           => apiFetch('/health'),
   getPrice:        ()           => apiFetch('/price'),
-  setManualPrice:  (bid, ask)   => apiFetch('/price/manual', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ bid, ask }),
-  }),
   mt5Status:       ()           => apiFetch('/mt5/status'),
   getAnalysis:     ()           => apiFetch('/analysis'),
   runAnalysis:     ()           => apiFetch('/analysis/run', { method: 'POST' }),
-  getNews:         ()           => apiFetch('/news'),
   calculateRisk:   (data)       => apiFetch('/risk/calculate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   }),
-  analyzeChart:    (file)       => {
-    const form = new FormData();
-    form.append('file', file);
-    return apiFetch('/vision/analyze', { method: 'POST', body: form });
-  },
 };
 
 export function timeSince(isoString) {

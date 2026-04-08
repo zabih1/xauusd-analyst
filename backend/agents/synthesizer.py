@@ -1,5 +1,5 @@
 """
-Synthesizer Agent — the "head analyst" that takes technical + fundamental
+Synthesizer Agent — the "head analyst" that takes technical
 analysis and produces a final, actionable trade plan.
 """
 import logging

@@ -112,9 +112,9 @@ export default function Header({ onRunAnalysis, analysisTime, loading }) {
 
           {/* MT5 status */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <span className={`status-dot ${mt5Connected ? 'live' : tick?.source === 'manual' ? 'manual' : 'offline'}`} />
+            <span className={`status-dot ${mt5Connected ? 'live' : 'offline'}`} />
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', color: 'var(--text-muted)', letterSpacing: '0.1em' }}>
-              {mt5Connected ? 'MT5 LIVE' : tick?.source === 'manual' ? 'MANUAL' : 'OFFLINE'}
+              {mt5Connected ? 'MT5 LIVE' : 'OFFLINE'}
             </span>
           </div>
 
